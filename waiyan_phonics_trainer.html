@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>拼读兽 · 音源与唤醒卡</title>
+<style>
+:root{
+  --ink:#212121; --sub:#6d6d6d; --paper:#fffdf7; --line:#e3ddd0;
+  --c1:#E64A19; --c2:#00897B; --c3:#1E88E5; --c4:#8E24AA; --c5:#43A047; --c6:#D81B60;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+  background:var(--paper);color:var(--ink);font-size:16px;line-height:1.5}
+header{padding:14px 16px 10px;border-bottom:2px solid var(--line);
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+h1{font-size:19px;margin:0}
+.badge{font-size:12px;padding:2px 8px;border-radius:10px;background:#efe9dc;color:var(--sub)}
+#timer{margin-left:auto;font-variant-numeric:tabular-nums;font-size:15px;
+  padding:4px 10px;border-radius:10px;background:#fff;border:1px solid var(--line)}
+#timer.over{background:#ffebee;color:#c62828;border-color:#ef9a9a}
+nav{display:flex;gap:6px;padding:10px 12px;overflow-x:auto;border-bottom:1px solid var(--line)}
+nav button{flex:0 0 auto;font-size:14px;padding:7px 13px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--line);background:#fff;color:var(--sub)}
+nav button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+main{padding:14px 16px 60px;max-width:820px;margin:0 auto}
+.hint{font-size:13px;color:var(--sub);margin:0 0 12px}
+.card{background:#fff;border:2px solid var(--line);border-radius:16px;padding:20px 16px;text-align:center;
+  box-shadow:0 2px 0 rgba(0,0,0,.05)}
+.card .tag{font-size:12px;color:var(--sub)}
+.card .word{font-size:40px;font-weight:700;margin:8px 0 2px;word-break:break-word}
+.card .chunk{font-size:17px;color:var(--c2);letter-spacing:1px;margin-bottom:4px}
+.card .zh{font-size:15px;color:var(--sub);min-height:22px}
+.card .zh.hide{visibility:hidden}
+.row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:14px}
+button.act{font-size:15px;padding:10px 16px;border-radius:12px;border:2px solid var(--ink);
+  background:#fff;cursor:pointer;font-weight:600}
+button.act.primary{background:var(--c2);border-color:var(--c2);color:#fff}
+button.act.warn{background:#fff3e0;border-color:var(--c1);color:var(--c1)}
+button.act.ghost{border-color:var(--line);color:var(--sub);font-weight:400;font-size:13px;padding:7px 12px}
+button.act:active{transform:translateY(1px)}
+.prog{height:8px;border-radius:5px;background:#efe9dc;overflow:hidden;margin:12px 0}
+.prog i{display:block;height:100%;background:var(--c5)}
+.unitblk{border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:12px;background:#fff}
+.unitblk h3{margin:0 0 2px;font-size:15px}
+.unitblk .meta{font-size:12px;color:var(--sub);margin-bottom:8px}
+.wlist{display:flex;flex-wrap:wrap;gap:6px}
+.wlist button{font-size:14px;padding:6px 10px;border-radius:9px;border:1px solid var(--line);
+  background:#fdfdfd;cursor:pointer}
+.wlist button .t{font-size:10px;color:var(--sub);margin-left:4px}
+.wlist button.done{background:#e8f5e9;border-color:#a5d6a7}
+.sent{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px;background:#fff}
+.sent .en{font-size:16px}
+.sent .zh{font-size:12px;color:var(--sub);margin-top:2px}
+.sent button{margin-top:6px;font-size:13px;padding:5px 11px;border-radius:9px;
+  border:1px solid var(--c3);color:var(--c3);background:#fff;cursor:pointer}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{border-bottom:1px solid var(--line);padding:7px 4px;text-align:left}
+th{font-size:12px;color:var(--sub);font-weight:400}
+.big{font-size:26px;font-weight:700}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}
+.kpi span{display:block;font-size:12px;color:var(--sub)}
+.spd{display:flex;gap:6px;align-items:center;justify-content:center;font-size:13px;color:var(--sub);margin-top:10px}
+.spd button{font-size:13px;padding:4px 10px;border-radius:8px;border:1px solid var(--line);background:#fff;cursor:pointer}
+.spd button.on{background:var(--c3);color:#fff;border-color:var(--c3)}
+.warnbox{background:#fff8e1;border:1px solid #ffe082;border-radius:10px;padding:10px 12px;font-size:13px;margin-bottom:12px}
+footer{font-size:12px;color:var(--sub);text-align:center;padding:16px;border-top:1px solid var(--line)}
+@media (max-width:420px){.card .word{font-size:32px}}
+</style>
+</head>
+<body>
+<header>
+  <h1>拼读兽 · 音源与唤醒卡</h1>
+  <span class="badge" id="today"></span>
+  <span class="badge" id="streak"></span>
+  <span id="timer">05:00</span>
+</header>
+<nav>
+  <button data-v="day" class="on">今日 5 张</button>
+  <button data-v="words">单元词库发音</button>
+  <button data-v="sent">句型跟读</button>
+  <button data-v="stat">进度</button>
+</nav>
+<main>
+  <div id="view"></div>
+</main>
+<footer>本页只做两件事：标准发音 + 明天该复习哪几张。主玩法在纸质卡上。数据存在本机浏览器里，不上传。</footer>
+
+<script id="core">
+/* 纯逻辑层：可在 node 中直接测试，不依赖 DOM */
+var CORE = (function () {
+  var INTERVALS = [1, 1, 2, 4, 7, 15, 30];   // level 0..6 对应下次间隔天数
+  var MAXLV = INTERVALS.length - 1;
+  var DAILY = 5;
+
+  function dstr(d) {
+    var y = d.getFullYear(), m = d.getMonth() + 1, a = d.getDate();
+    return y + '-' + (m < 10 ? '0' : '') + m + '-' + (a < 10 ? '0' : '') + a;
+  }
+  function parse(s) {
+    var p = s.split('-');
+    return new Date(+p[0], +p[1] - 1, +p[2]);
+  }
+  function addDays(s, n) {
+    var d = parse(s);
+    d.setDate(d.getDate() + n);
+    return dstr(d);
+  }
+  function diffDays(a, b) {          // b - a，单位天
+    return Math.round((parse(b) - parse(a)) / 86400000);
+  }
+  function initState() {
+    return { cards: {}, lastDay: null, streak: 0, doneToday: [], ver: 1 };
+  }
+  function getCard(st, id) {
+    if (!st.cards[id]) st.cards[id] = { lv: 0, due: null, seen: 0, miss: 0 };
+    return st.cards[id];
+  }
+  function isMastered(c) { return c && c.lv >= 4; }
+
+  // 开新的一天：结算连续天数、清空当天完成记录
+  // 只有"昨天"且"昨天做满了 DAILY 张"才算接上；隔天或没做满都归零
+  function rollDay(st, today) {
+    if (!st.cards) st.cards = {};
+    if (!st.doneToday) st.doneToday = [];
+    if (typeof st.streak !== 'number') st.streak = 0;
+    if (st.lastDay === today) return st;
+    if (st.lastDay) {
+      var gap = diffDays(st.lastDay, today);
+      if (gap === 1 && st.doneToday.length >= DAILY) st.streak = st.streak + 1;
+      else st.streak = 0;
+    }
+    st.lastDay = today;
+    st.doneToday = [];
+    return st;
+  }
+
+  // 一次作答：ok=true 升级，false 降两级并明天重来
+  function review(st, id, ok, today) {
+    var c = getCard(st, id);
+    c.seen += 1;
+    if (ok) {
+      c.lv = Math.min(MAXLV, c.lv + 1);
+    } else {
+      c.miss += 1;
+      c.lv = Math.max(0, c.lv - 2);
+    }
+    c.due = addDays(today, ok ? INTERVALS[c.lv] : 1);
+    if (st.doneToday.indexOf(id) < 0) st.doneToday.push(id);
+    return c;
+  }
+
+  /* 选今天的 n 张：
+     1) 已到期且答错过的（lv 低优先）
+     2) 其它已到期的（due 早优先）
+     3) 没学过的新词，按单元顺序
+     pool: [{id, unit, tier, ...}] */
+  function pickToday(st, pool, today, n) {
+    n = n || DAILY;
+    var due = [], fresh = [];
+    for (var i = 0; i < pool.length; i++) {
+      var it = pool[i], c = st.cards[it.id];
+      if (st.doneToday.indexOf(it.id) >= 0) continue;
+      if (!c || !c.due) { fresh.push(it); continue; }
+      if (diffDays(c.due, today) >= 0) due.push(it);
+    }
+    due.sort(function (a, b) {
+      var ca = st.cards[a.id], cb = st.cards[b.id];
+      if (ca.lv !== cb.lv) return ca.lv - cb.lv;
+      if (ca.due !== cb.due) return ca.due < cb.due ? -1 : 1;
+      return a.unit - b.unit;
+    });
+    var out = due.slice(0, n);
+    for (var j = 0; out.length < n && j < fresh.length; j++) out.push(fresh[j]);
+    return out;
+  }
+
+  // 明天的预告数量
+  function forecast(st, pool, today) {
+    var t = addDays(today, 1), k = 0;
+    for (var i = 0; i < pool.length; i++) {
+      var c = st.cards[pool[i].id];
+      if (c && c.due && diffDays(c.due, t) >= 0) k++;
+    }
+    return Math.min(k, DAILY);
+  }
+
+  function stats(st, pool) {
+    var total = pool.length, seen = 0, mastered = 0, weak = [];
+    var byUnit = {};
+    for (var i = 0; i < pool.length; i++) {
+      var it = pool[i], c = st.cards[it.id];
+      if (!byUnit[it.unit]) byUnit[it.unit] = { total: 0, mastered: 0 };
+      byUnit[it.unit].total++;
+      if (c && c.seen) seen++;
+      if (isMastered(c)) { mastered++; byUnit[it.unit].mastered++; }
+      if (c && c.miss >= 2 && !isMastered(c)) weak.push({ id: it.id, miss: c.miss });
+    }
+    weak.sort(function (a, b) { return b.miss - a.miss; });
+    return { total: total, seen: seen, mastered: mastered, byUnit: byUnit,
+             weak: weak.slice(0, 10) };
+  }
+
+  return { INTERVALS: INTERVALS, MAXLV: MAXLV, DAILY: DAILY, dstr: dstr,
+           addDays: addDays, diffDays: diffDays, initState: initState,
+           getCard: getCard, isMastered: isMastered, rollDay: rollDay,
+           review: review, pickToday: pickToday, forecast: forecast,
+           stats: stats };
+})();
+if (typeof module !== 'undefined') { module.exports = CORE; }
+</script>
+
+<script id="data">
+var DATA = {"textbook":"外研版（三年级起点）小学英语 四年级上册（2024 课标新版 / 2025 秋季启用）","units":[{"no":1,"title":"Unit 1 I love sports","titleZh":"我爱运动","mapName":"运动竞技场 · Sports Arena","digraph":"f / v","sound":"/f/ /v/","mouthTip":"上牙轻轻咬住下唇，气从牙缝里挤出来：f 只出气不出声（f-f-f），v 是同一个口型但要震喉咙（v-v-v）。让孩子摸自己喉咙，f 不抖、v 会抖","bossName":"竞技场守门员 · Arena Keeper","bossRule":"打出 4 个含 f 或 v 音的拼读兽（far / first / fail / volleyball / give / never…），或用 3 句运动句型命中，即可击破","words":[{"w":"sport","zh":"运动；体育","tier":2,"chunk":"s-p-or-t"},{"w":"jump","zh":"跳；跳跃","tier":2,"chunk":"j-u-m-p"},{"w":"high","zh":"高的；高地","tier":2,"chunk":"h-igh"},{"w":"far","zh":"远的；远地","tier":2,"chunk":"f-ar"},{"w":"ping-pong","zh":"乒乓球","tier":2,"chunk":"p-ing   p-o-ng"},{"w":"volleyball","zh":"排球","tier":2,"chunk":"v-o-ll-e-y-b-all"},{"w":"first","zh":"第一；首先","tier":2,"chunk":"f-ir-s-t"},{"w":"at first","zh":"起初；一开始","tier":2,"chunk":"a-t   f-ir-s-t"},{"w":"hope","zh":"希望","tier":2,"chunk":"h-o-p-e"},{"w":"lose","zh":"输；丢失","tier":3,"chunk":"l-o-s-e"},{"w":"because","zh":"因为","tier":3,"chunk":"b-e-c-a-u-s-e"},{"w":"because of","zh":"由于；因为","tier":3,"chunk":"b-e-c-a-u-s-e   o-f"},{"w":"cancer","zh":"癌症","tier":2,"chunk":"c-a-n-c-er"},{"w":"across","zh":"穿过；横过","tier":2,"chunk":"a-c-r-o-ss"},{"w":"money","zh":"钱","tier":3,"chunk":"m-o-n-e-y"},{"w":"hard","zh":"努力地；困难的","tier":2,"chunk":"h-ar-d"},{"w":"kind","zh":"善良的；友好的","tier":2,"chunk":"k-ind"},{"w":"keep","zh":"保持；继续","tier":2,"chunk":"k-ee-p"},{"w":"month","zh":"月；月份","tier":2,"chunk":"m-o-n-th"},{"w":"ill","zh":"有病的","tier":2,"chunk":"i-ll"},{"w":"year","zh":"年","tier":2,"chunk":"y-ear"},{"w":"remember","zh":"记住；记得","tier":2,"chunk":"r-e-m-e-m-b-er"},{"w":"fail","zh":"失败；不及格","tier":2,"chunk":"f-ai-l"},{"w":"give","zh":"给；赠予","tier":3,"chunk":"g-i-v-e"},{"w":"give up","zh":"放弃","tier":3,"chunk":"g-i-v-e   u-p"},{"w":"never","zh":"从不；永不","tier":2,"chunk":"n-e-v-er"},{"w":"try","zh":"尝试；努力","tier":2,"chunk":"t-r-y"},{"w":"player","zh":"运动员；选手","tier":2,"chunk":"p-l-ay-er"},{"w":"ability","zh":"能力；才能","tier":3,"chunk":"a-b-i-l-i-t-y"}],"sentences":[{"en":"I can ____ high.","zh":"我能跳得高。"},{"en":"Can you ____ far?","zh":"你能跳（跑）得远吗？"},{"en":"I like ____ .","zh":"我喜欢（某项运动）。"},{"en":"Never ____ up!","zh":"永不放弃！"}]},{"no":2,"title":"Unit 2 Helping at home","titleZh":"在家帮忙","mapName":"家务庭院 · Chore Yard","digraph":"w / y","sound":"/w/ /j/","mouthTip":"w 先把嘴唇嘟成小圆圈再快速放开，像吹蜡烛前那一下：w-w-w（water、wash）；y 舌头中部抬高贴近上颚，声音从缝里滑出来：y-y-y（yard、yes）","bossName":"家务泥怪 · Chore Mud","bossRule":"打出 5 个含 w 或 y 音的拼读兽（wash / water / warm / yard / woof / wall…），或用 3 句家务句型命中，即可击破","words":[{"w":"phew","zh":"哎呀（表示松口气）","tier":3,"chunk":"ph-e-w"},{"w":"wash","zh":"洗","tier":2,"chunk":"w-a-sh"},{"w":"dish","zh":"碗碟；一道菜","tier":2,"chunk":"d-i-sh"},{"w":"feed","zh":"喂养","tier":2,"chunk":"f-ee-d"},{"w":"sweep","zh":"扫；打扫","tier":2,"chunk":"s-w-ee-p"},{"w":"floor","zh":"地板","tier":2,"chunk":"f-l-oor"},{"w":"rubbish","zh":"垃圾","tier":2,"chunk":"r-u-b-b-i-sh"},{"w":"chore","zh":"家务活","tier":2,"chunk":"ch-ore"},{"w":"to-do list","zh":"待办清单","tier":3,"chunk":"t-o   d-o   l-i-s-t"},{"w":"may","zh":"可以；可能","tier":2,"chunk":"m-ay"},{"w":"outside","zh":"外面；户外","tier":2,"chunk":"ou-t-s-i-d-e"},{"w":"tidy","zh":"整洁的；整理","tier":2,"chunk":"t-i-d-y"},{"w":"easy","zh":"容易的","tier":2,"chunk":"ea-s-y"},{"w":"clean","zh":"打扫；干净的","tier":2,"chunk":"c-l-ea-n"},{"w":"woof","zh":"汪汪（狗叫声）","tier":2,"chunk":"w-oo-f"},{"w":"job","zh":"工作；活儿","tier":1,"chunk":"j-o-b"},{"w":"good job","zh":"干得好","tier":2,"chunk":"g-oo-d   j-o-b"},{"w":"dirty","zh":"脏的","tier":2,"chunk":"d-ir-t-y"},{"w":"desk","zh":"书桌","tier":2,"chunk":"d-e-s-k"},{"w":"wall","zh":"墙","tier":2,"chunk":"w-all"},{"w":"again","zh":"又一次；再","tier":3,"chunk":"a-g-ai-n"},{"w":"also","zh":"也；而且","tier":3,"chunk":"a-l-s-o"},{"w":"problem","zh":"问题；难题","tier":2,"chunk":"p-r-o-b-l-e-m"},{"w":"finish","zh":"完成；结束","tier":2,"chunk":"f-i-n-i-sh"},{"w":"sunshine","zh":"阳光","tier":2,"chunk":"s-u-n-sh-i-n-e"},{"w":"sometimes","zh":"有时","tier":3,"chunk":"s-o-m-e-t-i-m-e-s"},{"w":"feel","zh":"感觉","tier":2,"chunk":"f-ee-l"},{"w":"tired","zh":"疲倦的","tier":2,"chunk":"t-ir-e-d"},{"w":"helpful","zh":"有帮助的","tier":2,"chunk":"h-e-l-p-f-u-l"},{"w":"warm","zh":"温暖的；使暖","tier":2,"chunk":"w-ar-m"},{"w":"warm up","zh":"热身；变暖","tier":2,"chunk":"w-ar-m   u-p"},{"w":"water","zh":"水；给…浇水","tier":3,"chunk":"w-a-t-er"},{"w":"yard","zh":"院子","tier":2,"chunk":"y-ar-d"},{"w":"helper","zh":"帮手","tier":2,"chunk":"h-e-l-p-er"},{"w":"pick","zh":"采；摘；挑选","tier":2,"chunk":"p-i-ck"},{"w":"pig","zh":"猪","tier":1,"chunk":"p-i-g"},{"w":"cow","zh":"奶牛","tier":2,"chunk":"c-ow"},{"w":"collect","zh":"收集","tier":2,"chunk":"c-o-ll-e-c-t"},{"w":"cut","zh":"割；剪；切","tier":1,"chunk":"c-u-t"},{"w":"grass","zh":"草；草地","tier":2,"chunk":"g-r-a-ss"}],"sentences":[{"en":"Can you ____ the ____ ?","zh":"你能（做某事）吗？"},{"en":"I can ____ at home.","zh":"我在家能做（某件家务）。"},{"en":"Let's ____ the floor.","zh":"我们来扫地吧。"},{"en":"Good job! You are ____ .","zh":"干得好！你真（棒／勤快）。"}]},{"no":3,"title":"Unit 3 What's the weather like?","titleZh":"天气怎么样？","mapName":"天气观察站 · Weather Station","digraph":"c / h","sound":"/k/ /h/","mouthTip":"c 舌根往上顶住软腭，憋一下再放开，像轻轻咳一声：c-c-c（cold、cool）；h 嘴张开只送一口热气，不用舌头也不震喉咙，像对手掌哈气：h-h-h（hot、have）","bossName":"天气观察站长 · Weather Warden","bossRule":"打出 5 个含 c 或 h 音的拼读兽（cold / cool / coat / cloud / hot / carry…），或用 3 句天气句型命中，即可击破","words":[{"w":"weather","zh":"天气","tier":2,"chunk":"w-ea-th-er"},{"w":"sunny","zh":"晴朗的","tier":2,"chunk":"s-u-nn-y"},{"w":"cloud","zh":"云","tier":2,"chunk":"c-l-ou-d"},{"w":"cloudy","zh":"多云的","tier":2,"chunk":"c-l-ou-d-y"},{"w":"wind","zh":"风","tier":2,"chunk":"w-ind"},{"w":"windy","zh":"有风的","tier":2,"chunk":"w-ind-y"},{"w":"blow","zh":"吹；刮风","tier":2,"chunk":"b-l-ow"},{"w":"rain","zh":"雨；下雨","tier":2,"chunk":"r-ai-n"},{"w":"rainy","zh":"下雨的","tier":2,"chunk":"r-ai-n-y"},{"w":"snow","zh":"雪；下雪","tier":2,"chunk":"s-n-ow"},{"w":"snowy","zh":"下雪的","tier":2,"chunk":"s-n-ow-y"},{"w":"any","zh":"任何的；一些","tier":3,"chunk":"a-n-y"},{"w":"cold","zh":"寒冷的；感冒","tier":2,"chunk":"c-old"},{"w":"or","zh":"或者；还是","tier":2,"chunk":"or"},{"w":"enjoy","zh":"享受；喜爱","tier":2,"chunk":"e-n-j-oy"},{"w":"diary","zh":"日记","tier":3,"chunk":"d-i-ar-y"},{"w":"special","zh":"特别的","tier":3,"chunk":"s-p-e-c-i-a-l"},{"w":"teacher","zh":"老师","tier":2,"chunk":"t-ea-ch-er"},{"w":"taste","zh":"尝；味道","tier":2,"chunk":"t-a-s-t-e"},{"w":"ice cream","zh":"冰淇淋","tier":2,"chunk":"i-c-e   c-r-ea-m"},{"w":"real","zh":"真实的","tier":3,"chunk":"r-ea-l"},{"w":"later","zh":"后来；稍后","tier":2,"chunk":"l-a-t-er"},{"w":"surprise","zh":"惊喜；使惊讶","tier":2,"chunk":"s-ur-p-r-i-s-e"},{"w":"coat","zh":"外套","tier":2,"chunk":"c-oa-t"},{"w":"turn","zh":"转向；轮到","tier":2,"chunk":"t-ur-n"},{"w":"turn on","zh":"打开（电器）","tier":2,"chunk":"t-ur-n   o-n"},{"w":"TV","zh":"电视","tier":3,"chunk":"T-V"},{"w":"report","zh":"报道；报告","tier":2,"chunk":"r-e-p-or-t"},{"w":"hot","zh":"炎热的","tier":1,"chunk":"h-o-t"},{"w":"cool","zh":"凉爽的；酷的","tier":2,"chunk":"c-oo-l"},{"w":"umbrella","zh":"雨伞","tier":3,"chunk":"u-m-b-r-e-ll-a"},{"w":"carry","zh":"拿；带；搬","tier":2,"chunk":"c-ar-r-y"},{"w":"sun","zh":"太阳","tier":1,"chunk":"s-u-n"}],"sentences":[{"en":"What's the weather like in ____ ?","zh":"（某地）天气怎么样？"},{"en":"It's ____ today.","zh":"今天（天气）。"},{"en":"Is it ____ in ____ ?","zh":"（某地）是（某天气）吗？"},{"en":"I ____ the ____ weather.","zh":"我（喜欢／享受）（某种）天气。"}]},{"no":4,"title":"Unit 4 Wonderful seasons","titleZh":"奇妙的四季","mapName":"四季森林 · Season Forest","digraph":"qu / j","sound":"/kw/ /dʒ/","mouthTip":"qu 是 c 和 w 连在一起：先舌根顶住再把嘴唇嘟圆，一口气读完 kw-kw（quite、queen）；j 上下牙轻合、舌尖顶上齿龈，震着喉咙冲出来：j-j-j（join、jump）","bossName":"四季旋环兽 · Season Ring","bossRule":"打出 4 个含 qu 或 j 音的拼读兽（quite / equator / join / queen / juice…），再补 2 个季节兽，即可击破；或用 4 句季节句型命中","words":[{"w":"season","zh":"季节","tier":2,"chunk":"s-ea-s-o-n"},{"w":"spring","zh":"春天","tier":2,"chunk":"s-p-r-ing"},{"w":"summer","zh":"夏天","tier":2,"chunk":"s-u-mm-er"},{"w":"autumn","zh":"秋天","tier":3,"chunk":"a-u-t-u-m-n"},{"w":"winter","zh":"冬天","tier":2,"chunk":"w-i-n-t-er"},{"w":"favourite","zh":"最喜爱的","tier":3,"chunk":"f-a-v-our-i-t-e"},{"w":"birthday","zh":"生日","tier":2,"chunk":"b-ir-th-d-ay"},{"w":"fly","zh":"飞；放飞","tier":2,"chunk":"f-l-y"},{"w":"fly kites","zh":"放风筝","tier":2,"chunk":"f-l-y   k-i-t-e-s"},{"w":"snowstorm","zh":"暴风雪","tier":2,"chunk":"s-n-ow-s-t-or-m"},{"w":"beach","zh":"海滩","tier":2,"chunk":"b-ea-ch"},{"w":"sea","zh":"海；海洋","tier":2,"chunk":"s-ea"},{"w":"equator","zh":"赤道","tier":3,"chunk":"e-qu-a-t-or"},{"w":"round","zh":"圆的；绕着","tier":2,"chunk":"r-ou-n-d"},{"w":"quite","zh":"相当；很","tier":2,"chunk":"qu-i-t-e"},{"w":"join","zh":"加入；参加","tier":2,"chunk":"j-oi-n"},{"w":"queen","zh":"王后；女王（拓展）","tier":2,"chunk":"qu-ee-n"},{"w":"juice","zh":"果汁（拓展）","tier":2,"chunk":"j-ui-c-e"},{"w":"quick","zh":"快的（拓展）","tier":2,"chunk":"qu-i-ck"}],"sentences":[{"en":"My favourite season is ____ .","zh":"我最喜欢的季节是（某季）。"},{"en":"In ____ , I can ____ .","zh":"在（某季），我可以（做某事）。"},{"en":"It's ____ in ____ .","zh":"（某季）是（某天气）。"},{"en":"Let's ____ together.","zh":"我们一起（做某事）吧。"}]},{"no":5,"title":"Unit 5 Let's go!","titleZh":"我们出发吧！","mapName":"出发港口 · Journey Port","digraph":"sh / ch","sound":"/ʃ/ /tʃ/","mouthTip":"sh 嘴唇嘟成小圆、牙齿轻合，气流长长地送出去，像让人安静：sh——（ship、shop）；ch 同样口型但舌尖先顶住上齿龈，气一下冲出来，像小火车：ch-ch-ch（chug、chair）。一个长、一个短，对比着念","bossName":"出发港口长 · Journey Captain","bossRule":"打出 4 个含 sh 或 ch 音的拼读兽（ship / shop / wash / chug / beach…），再补 2 个交通兽，即可击破；或用 4 句出行句型命中","words":[{"w":"bus","zh":"公共汽车","tier":1,"chunk":"b-u-s"},{"w":"car","zh":"小汽车","tier":2,"chunk":"c-ar"},{"w":"train","zh":"火车","tier":2,"chunk":"t-r-ai-n"},{"w":"city","zh":"城市","tier":3,"chunk":"c-i-t-y"},{"w":"town","zh":"城镇","tier":2,"chunk":"t-ow-n"},{"w":"plane","zh":"飞机","tier":2,"chunk":"p-l-a-n-e"},{"w":"sky","zh":"天空","tier":2,"chunk":"s-k-y"},{"w":"ship","zh":"轮船","tier":2,"chunk":"sh-i-p"},{"w":"place","zh":"地点；地方","tier":2,"chunk":"p-l-a-c-e"},{"w":"near","zh":"靠近；在附近","tier":2,"chunk":"n-ear"},{"w":"travel","zh":"旅行","tier":2,"chunk":"t-r-a-v-e-l"},{"w":"way","zh":"路；方式","tier":2,"chunk":"w-ay"},{"w":"picnic","zh":"野餐","tier":2,"chunk":"p-i-c-n-i-c"},{"w":"minute","zh":"分钟","tier":3,"chunk":"m-i-n-u-t-e"},{"w":"wear","zh":"穿；戴","tier":3,"chunk":"w-ear"},{"w":"live","zh":"居住；生活","tier":3,"chunk":"l-i-v-e"},{"w":"away","zh":"离开；在远处","tier":2,"chunk":"a-w-ay"},{"w":"truck","zh":"卡车","tier":2,"chunk":"t-r-u-ck"},{"w":"bamboo","zh":"竹子","tier":2,"chunk":"b-a-m-b-oo"},{"w":"airport","zh":"机场","tier":2,"chunk":"air-p-or-t"},{"w":"shop","zh":"商店（拓展）","tier":2,"chunk":"sh-o-p"},{"w":"chug","zh":"轰隆隆前进（拓展）","tier":2,"chunk":"ch-u-g"}],"sentences":[{"en":"Let's go by ____ .","zh":"我们坐（某交通工具）去吧。"},{"en":"How do you go to ____ ?","zh":"你怎么去（某地）？"},{"en":"I want to go to ____ .","zh":"我想去（某地）。"},{"en":"We can see a ____ .","zh":"我们能看到一（个某物）。"}]},{"no":6,"title":"Unit 6 Find your way","titleZh":"找到你的路","mapName":"寻路迷宫 · Maze Town","digraph":"th","sound":"/θ/ /ð/","mouthTip":"舌尖轻轻放在上下牙之间，从舌头和牙齿的缝里送气：think、three 只出气不出声（/θ/）；this、the、that 要震喉咙（/ð/）。让孩子照镜子看舌尖有没有露出来","bossName":"迷宫守钟人 · Maze Clockman","bossRule":"打出 4 个含 th 音的拼读兽（think / three / this / month / birthday…），再用 3 句指路句型把它引到出口，即可击破","words":[{"w":"wheel","zh":"轮子；方向盘","tier":2,"chunk":"wh-ee-l"},{"w":"left","zh":"左边；向左","tier":2,"chunk":"l-e-f-t"},{"w":"straight","zh":"直的；一直","tier":3,"chunk":"s-t-r-ai-g-h-t"},{"w":"library","zh":"图书馆","tier":3,"chunk":"l-i-b-r-ar-y"},{"w":"centre","zh":"中心","tier":3,"chunk":"c-e-n-t-r-e"},{"w":"cinema","zh":"电影院","tier":3,"chunk":"c-i-n-e-m-a"},{"w":"hospital","zh":"医院","tier":2,"chunk":"h-o-s-p-i-t-a-l"},{"w":"supermarket","zh":"超市","tier":2,"chunk":"s-u-p-er-m-ar-k-e-t"},{"w":"museum","zh":"博物馆","tier":3,"chunk":"m-u-s-e-u-m"},{"w":"tomorrow","zh":"明天","tier":2,"chunk":"t-o-m-or-r-ow"},{"w":"woman","zh":"女人","tier":3,"chunk":"w-o-m-a-n"},{"w":"Excuse me.","zh":"打扰一下。","tier":3,"chunk":"E-x-c-u-s-e   m-e-."},{"w":"wish","zh":"希望；祝愿","tier":2,"chunk":"w-i-sh"},{"w":"true","zh":"真的；符合事实的","tier":2,"chunk":"t-r-ue"},{"w":"step","zh":"台阶；一步","tier":2,"chunk":"s-t-e-p"},{"w":"own","zh":"自己的；拥有","tier":2,"chunk":"ow-n"},{"w":"cross","zh":"穿过；越过","tier":2,"chunk":"c-r-o-ss"},{"w":"careful","zh":"小心的","tier":2,"chunk":"c-ar-e-f-u-l"},{"w":"underground","zh":"地铁；地下的","tier":2,"chunk":"u-n-d-er-g-r-ou-n-d"},{"w":"sports centre","zh":"体育中心","tier":3,"chunk":"s-p-or-t-s   c-e-n-t-r-e"},{"w":"turn left","zh":"向左转","tier":2,"chunk":"t-ur-n   l-e-f-t"},{"w":"turn right","zh":"向右转","tier":2,"chunk":"t-ur-n   r-igh-t"},{"w":"go straight","zh":"直行","tier":3,"chunk":"g-o   s-t-r-ai-g-h-t"},{"w":"go past","zh":"经过","tier":2,"chunk":"g-o   p-a-s-t"},{"w":"next to","zh":"紧挨着；在…旁边","tier":2,"chunk":"n-e-x-t   t-o"},{"w":"think","zh":"想；认为（拓展）","tier":2,"chunk":"th-i-nk"},{"w":"three","zh":"三（拓展）","tier":2,"chunk":"th-r-ee"},{"w":"this","zh":"这个（拓展）","tier":2,"chunk":"th-i-s"}],"sentences":[{"en":"Excuse me. Where's the ____ ?","zh":"打扰一下，（某地方）在哪里？"},{"en":"Turn ____ at the ____ .","zh":"在（某处）向（左／右）转。"},{"en":"Go straight and you'll see the ____ .","zh":"直走你就会看到（某地方）。"},{"en":"It's next to the ____ .","zh":"它就在（某地方）旁边。"},{"en":"I think it's ____ .","zh":"我觉得它（在某方位）。"}]}]};
+</script>
+
+<script id="ui">
+(function () {
+  if (typeof document === 'undefined') return;
+  var KEY = 'phonics-monsters-v1';
+  var POOL = [];
+  DATA.units.forEach(function (u) {
+    u.words.forEach(function (w) {
+      POOL.push({ id: 'u' + u.no + ':' + w.w, w: w.w, zh: w.zh, chunk: w.chunk,
+                  tier: w.tier, unit: u.no, digraph: u.digraph });
+    });
+  });
+
+  var st, today = CORE.dstr(new Date()), rate = 0.8, voice = null;
+
+  function load() {
+    try { st = JSON.parse(localStorage.getItem(KEY)) || CORE.initState(); }
+    catch (e) { st = CORE.initState(); }
+    if (!st.cards) st = CORE.initState();
+    CORE.rollDay(st, today);
+    save();
+  }
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {}
+  }
+
+  /* ---------------- TTS ---------------- */
+  function pickVoice() {
+    if (!('speechSynthesis' in window)) return;
+    var vs = speechSynthesis.getVoices() || [];
+    var pref = ['Samantha', 'Alex', 'Daniel', 'Karen', 'Google US English',
+                'Microsoft Aria', 'Microsoft Zira'];
+    for (var i = 0; i < pref.length; i++) {
+      for (var j = 0; j < vs.length; j++) {
+        if (vs[j].name.indexOf(pref[i]) >= 0) { voice = vs[j]; return; }
+      }
+    }
+    for (var k = 0; k < vs.length; k++) {
+      if (/^en[-_]/i.test(vs[k].lang)) { voice = vs[k]; return; }
+    }
+  }
+  if ('speechSynthesis' in window) {
+    pickVoice();
+    speechSynthesis.onvoiceschanged = pickVoice;
+  }
+  function say(text, r) {
+    if (!('speechSynthesis' in window)) {
+      alert('这个浏览器不支持朗读，请换 Safari 或 Chrome 打开本页。');
+      return;
+    }
+    speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = 'en-US';
+    u.rate = r || rate;
+    if (voice) u.voice = voice;
+    speechSynthesis.speak(u);
+  }
+  // 句型朗读：空格处不念 "blank"，而是留一段真实停顿，分段排队朗读
+  function sayFrame(en, r) {
+    if (!('speechSynthesis' in window)) {
+      alert('这个浏览器不支持朗读，请换 Safari 或 Chrome 打开本页。');
+      return;
+    }
+    speechSynthesis.cancel();
+    var parts = String(en).split(/_+/);
+    parts.forEach(function (p, i) {
+      var txt = p.replace(/\s+/g, ' ').replace(/^\s*[,，]\s*/, '').trim();
+      if (/[A-Za-z]/.test(txt)) {
+        var u = new SpeechSynthesisUtterance(txt);
+        u.lang = 'en-US';
+        u.rate = r || 0.75;
+        if (voice) u.voice = voice;
+        speechSynthesis.speak(u);
+      }
+      if (i < parts.length - 1) {          // 空格处排一个静音停顿，给孩子填词
+        // 注意：部分浏览器会跳过纯空白文本，所以用真实音节 + volume 0 占出时长
+        var g = new SpeechSynthesisUtterance('mm mm');
+        g.lang = 'en-US';
+        g.volume = 0;
+        g.rate = 0.4;
+        speechSynthesis.speak(g);
+      }
+    });
+  }
+  function spell(word) {          // 按 chunk 分块慢读，再整读
+    var parts = String(word).split(/[\s\-]+/).join(' ');
+    say(parts, 0.55);
+    setTimeout(function () { say(word, 0.85); }, 1100);
+  }
+
+  /* ---------------- 5 分钟计时 ---------------- */
+  var left = 300, tick = null, tEl = document.getElementById('timer');
+  function startTimer() {
+    if (tick) return;
+    tick = setInterval(function () {
+      left--;
+      var m = Math.floor(Math.abs(left) / 60), s = Math.abs(left) % 60;
+      tEl.textContent = (left < 0 ? '+' : '') + (m < 10 ? '0' : '') + m + ':' +
+                        (s < 10 ? '0' : '') + s;
+      if (left <= 0) tEl.className = 'over';
+    }, 1000);
+  }
+
+  /* ---------------- 视图 ---------------- */
+  var view = document.getElementById('view'), cur = 'day';
+  var queue = [], qi = 0, showZh = false;
+
+  // 用 template 解析，才能正确构造 <tr>/<td> 这类必须在表格上下文里的片段
+  function el(html) {
+    var t = document.createElement('template');
+    t.innerHTML = String(html).trim();
+    return t.content.firstElementChild;
+  }
+  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+
+  function renderDay() {
+    view.innerHTML = '';
+    var doneN = st.doneToday.length;
+    // 每天硬性只发 DAILY 张，做满就收工（避免又被补上新词、超过 5 分钟）
+    if (doneN >= CORE.DAILY) {
+      queue = []; qi = 0;
+      view.appendChild(el('<p class="hint">今天的 5 张已经做完了，明天再来。想多练就去「单元词库发音」随便点。</p>'));
+      view.appendChild(el('<div class="card"><div class="tag">明天要唤醒</div>' +
+        '<div class="big">' + CORE.forecast(st, POOL, today) + ' 张</div></div>'));
+      return;
+    }
+    if (!queue.length || qi >= queue.length) {
+      queue = CORE.pickToday(st, POOL, today, CORE.DAILY - doneN);
+      qi = 0;
+    }
+    if (!queue.length) {
+      view.appendChild(el('<p class="hint">今天的 5 张已经做完了，明天再来。想多练就去「单元词库发音」随便点。</p>'));
+      view.appendChild(el('<div class="card"><div class="tag">明天要唤醒</div>' +
+        '<div class="big">' + CORE.forecast(st, POOL, today) + ' 张</div></div>'));
+      return;
+    }
+    var it = queue[qi];
+    var c = CORE.getCard(st, it.id);
+    view.appendChild(el('<p class="hint">第 ' + (doneN + 1) + ' / ' + CORE.DAILY +
+      ' 张 · 先点喇叭听，自己读出来，再判断会不会。</p>'));
+    var card = el(
+      '<div class="card">' +
+      '<div class="tag">U' + it.unit + ' ' + esc(it.digraph) + ' · LEVEL ' + c.lv + '</div>' +
+      '<div class="word">' + esc(it.w) + '</div>' +
+      '<div class="chunk">' + esc(it.chunk) + '</div>' +
+      '<div class="zh' + (showZh ? '' : ' hide') + '">' + esc(it.zh) + '</div>' +
+      '<div class="row">' +
+        '<button class="act primary" data-a="say">🔊 整读</button>' +
+        '<button class="act" data-a="spell">🐢 分块慢读</button>' +
+      '</div>' +
+      '<div class="row">' +
+        '<button class="act warn" data-a="no">还不会</button>' +
+        '<button class="act primary" data-a="yes">读对了</button>' +
+      '</div>' +
+      '<div class="row"><button class="act ghost" data-a="zh">' +
+        (showZh ? '收起意思' : '看意思') + '</button></div>' +
+      '<div class="spd">语速' +
+        '<button data-r="0.6"' + (rate === 0.6 ? ' class="on"' : '') + '>慢</button>' +
+        '<button data-r="0.8"' + (rate === 0.8 ? ' class="on"' : '') + '>中</button>' +
+        '<button data-r="1"' + (rate === 1 ? ' class="on"' : '') + '>正常</button>' +
+      '</div></div>');
+    view.appendChild(card);
+    var bar = el('<div class="prog"><i style="width:' +
+      Math.round(doneN / CORE.DAILY * 100) + '%"></i></div>');
+    view.appendChild(bar);
+
+    card.addEventListener('click', function (e) {
+      var b = e.target.closest('button');
+      if (!b) return;
+      if (b.dataset.r) { rate = +b.dataset.r; renderDay(); return; }
+      var a = b.dataset.a;
+      if (a === 'say') { startTimer(); say(it.w); }
+      else if (a === 'spell') { startTimer(); spell(it.w); }
+      else if (a === 'zh') { showZh = !showZh; renderDay(); }
+      else if (a === 'yes' || a === 'no') {
+        startTimer();
+        CORE.review(st, it.id, a === 'yes', today);
+        save();
+        showZh = false;
+        qi++;
+        if (st.doneToday.length >= CORE.DAILY) { queue = []; qi = 0; }
+        renderDay();
+        document.getElementById('streak').textContent = '连续 ' + st.streak + ' 天';
+      }
+    });
+  }
+
+  function renderWords() {
+    view.innerHTML = '';
+    view.appendChild(el('<p class="hint">点任意单词听标准发音；绿色 = 已经掌握（LEVEL 4 以上）。这里不计分，随便点。</p>'));
+    DATA.units.forEach(function (u) {
+      var blk = el('<div class="unitblk"><h3>U' + u.no + ' ' + esc(u.title) + '</h3>' +
+        '<div class="meta">' + esc(u.digraph) + ' ' + esc(u.sound) + ' · ' +
+        esc(u.mapName) + '</div><div class="wlist"></div></div>');
+      var box = blk.querySelector('.wlist');
+      u.words.forEach(function (w) {
+        var id = 'u' + u.no + ':' + w.w;
+        var done = CORE.isMastered(st.cards[id]);
+        var b = el('<button' + (done ? ' class="done"' : '') + '>' + esc(w.w) +
+          '<span class="t">' + '·'.repeat(w.tier) + '</span></button>');
+        b.addEventListener('click', function () { startTimer(); say(w.w); });
+        box.appendChild(b);
+      });
+      view.appendChild(blk);
+    });
+  }
+
+  function renderSent() {
+    view.innerHTML = '';
+    view.appendChild(el('<p class="hint">Boss 战句型。点一下听整句：下划线处会留一段停顿（不念出来），让孩子在停顿里自己填上手里的拼读兽，再跟读一遍。</p>'));
+    DATA.units.forEach(function (u) {
+      var blk = el('<div class="unitblk"><h3>U' + u.no + ' ' + esc(u.digraph) +
+        ' · ' + esc(u.bossName) + '</h3><div class="meta">' + esc(u.bossRule) +
+        '</div></div>');
+      u.sentences.forEach(function (s) {
+        var row = el('<div class="sent"><div class="en">' + esc(s.en) + '</div>' +
+          '<div class="zh">' + esc(s.zh) + '</div>' +
+          '<button>🔊 听整句</button></div>');
+        row.querySelector('button').addEventListener('click', function () {
+          startTimer();
+          sayFrame(s.en, 0.75);
+        });
+        blk.appendChild(row);
+      });
+      view.appendChild(blk);
+    });
+  }
+
+  function renderStat() {
+    view.innerHTML = '';
+    var s = CORE.stats(st, POOL);
+    view.appendChild(el('<div class="grid3">' +
+      '<div class="kpi"><b class="big">' + s.mastered + '</b><span>已掌握</span></div>' +
+      '<div class="kpi"><b class="big">' + s.seen + '</b><span>练过</span></div>' +
+      '<div class="kpi"><b class="big">' + s.total + '</b><span>词表总数</span></div>' +
+      '</div>'));
+    view.appendChild(el('<div class="prog"><i style="width:' +
+      Math.round(s.mastered / s.total * 100) + '%"></i></div>'));
+    var tb = el('<table><thead><tr><th>单元</th><th>掌握 / 总数</th><th>进度</th></tr></thead><tbody></tbody></table>');
+    var body = tb.querySelector('tbody');
+    DATA.units.forEach(function (u) {
+      var b = s.byUnit[u.no] || { total: 0, mastered: 0 };
+      body.appendChild(el('<tr><td>U' + u.no + ' ' + esc(u.digraph) + '</td><td>' +
+        b.mastered + ' / ' + b.total + '</td><td>' +
+        (b.total ? Math.round(b.mastered / b.total * 100) : 0) + '%</td></tr>'));
+    });
+    view.appendChild(tb);
+    if (s.weak.length) {
+      var w = el('<div class="warnbox"><b>反复错的词（建议家长在纸卡上单独挑出来）：</b><br>' +
+        s.weak.map(function (x) { return esc(x.id.split(':')[1]) + '（错 ' + x.miss + ' 次）'; })
+        .join('、') + '</div>');
+      view.appendChild(w);
+    }
+    view.appendChild(el('<p class="hint">明天要唤醒 ' + CORE.forecast(st, POOL, today) +
+      ' 张。间隔天数：答对后依次 1 / 1 / 2 / 4 / 7 / 15 / 30 天，答错退两级、明天重来。</p>'));
+    var rst = el('<button class="act ghost">清空本机记录</button>');
+    rst.addEventListener('click', function () {
+      if (confirm('清空后所有掌握进度都会没有，确定？')) {
+        st = CORE.initState(); CORE.rollDay(st, today); save(); renderStat();
+      }
+    });
+    view.appendChild(rst);
+  }
+
+  function render() {
+    if (cur === 'day') renderDay();
+    else if (cur === 'words') renderWords();
+    else if (cur === 'sent') renderSent();
+    else renderStat();
+  }
+
+  document.querySelector('nav').addEventListener('click', function (e) {
+    var b = e.target.closest('button');
+    if (!b) return;
+    cur = b.dataset.v;
+    Array.prototype.forEach.call(document.querySelectorAll('nav button'),
+      function (x) { x.className = x === b ? 'on' : ''; });
+    render();
+  });
+
+  load();
+  document.getElementById('today').textContent = today;
+  document.getElementById('streak').textContent = '连续 ' + st.streak + ' 天';
+  render();
+})();
+</script>
+</body>
+</html>
